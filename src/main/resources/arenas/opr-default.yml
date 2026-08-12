@@ -1,0 +1,23 @@
+schema-version: 1
+id: opr-default
+mode: opr
+template-world: opr_template
+bounds: {min-x: -128, min-y: -64, min-z: -128, max-x: 128, max-y: 320, max-z: 128}
+spawns:
+  - {id: fort-a, team: A, x: -100, y: 80, z: 0}
+  - {id: fort-b, team: B, x: 100, y: 80, z: 0}
+objectives:
+  - {id: luna, region: {min-x: -55, min-y: 70, min-z: -10, max-x: -35, max-y: 95, max-z: 10}}
+  - {id: sol, region: {min-x: -10, min-y: 70, min-z: -10, max-x: 10, max-y: 95, max-z: 10}}
+  - {id: astra, region: {min-x: 35, min-y: 70, min-z: -10, max-x: 55, max-y: 95, max-z: 10}}
+structures:
+  - {id: gate-a, kind: GATE, x: -90, y: 80, z: 0}
+  - {id: gate-b, kind: GATE, x: 90, y: 80, z: 0}
+  - {id: command-a, kind: COMMAND_POST, x: -45, y: 80, z: 0}
+  - {id: command-b, kind: COMMAND_POST, x: 45, y: 80, z: 0}
+resources:
+  - {id: ore-1, kind: ORE, x: 0, y: 75, z: 40}
+  - {id: wood-1, kind: WOOD, x: 0, y: 75, z: -40}
+  - {id: hides-1, kind: HIDES, x: -20, y: 75, z: 40}
+  - {id: azoth-1, kind: AZOTH, x: 20, y: 75, z: -40}
+siege-placements: []

@@ -1,0 +1,20 @@
+schema-version: 1
+id: siege-default
+mode: siege
+template-world: siege_template
+bounds: {min-x: -160, min-y: -64, min-z: -160, max-x: 160, max-y: 320, max-z: 160}
+spawns:
+  - {id: war-camp, team: A, x: 0, y: 80, z: -130}
+  - {id: fort, team: B, x: 0, y: 80, z: 110}
+objectives:
+  - {id: a, region: {min-x: -70, min-y: 70, min-z: -50, max-x: -50, max-y: 95, max-z: -30}}
+  - {id: b, region: {min-x: -10, min-y: 70, min-z: -50, max-x: 10, max-y: 95, max-z: -30}}
+  - {id: c, region: {min-x: 50, min-y: 70, min-z: -50, max-x: 70, max-y: 95, max-z: -30}}
+structures:
+  - {id: fort-gate, kind: GATE, x: 0, y: 80, z: 60}
+  - {id: claim, kind: COMMAND_POST, x: 0, y: 80, z: 105}
+  - {id: fort-wall, kind: WALL, x: 20, y: 80, z: 60}
+resources: []
+siege-placements:
+  - {id: attacker-cannon, x: 0, y: 80, z: -100}
+  - {id: defender-ballista, x: 0, y: 90, z: 75}
