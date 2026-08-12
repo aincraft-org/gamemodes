@@ -1,0 +1,16 @@
+name: Gamemodes
+version: '0.1.0-SNAPSHOT'
+main: dev.jlo.gamemodes.GamemodesPlugin
+api-version: '26.2'
+author: jlo
+description: Deterministic New World-inspired arena gamemodes
+commands:
+  gamemodes:
+    description: Manage gamemode queues and matches
+    aliases: [gmodes, opr, siege]
+    permission: gamemodes.play
+permissions:
+  gamemodes.play:
+    default: true
+  gamemodes.admin:
+    default: op

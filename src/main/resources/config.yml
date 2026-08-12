@@ -1,0 +1,30 @@
+schema-version: 1
+global:
+  storage: data/matches.db
+  queue-timeout-seconds: 300
+  disconnect-reservation-seconds: 300
+  recovery-enabled: true
+  recommended-quorum-fraction: 0.5
+  ui:
+    scoreboard-enabled: true
+    boss-bar-enabled: true
+    action-bar-enabled: true
+  safety:
+    block-unauthorized-teleports: true
+    block-unauthorized-transfers: true
+modes:
+  opr:
+    nominal-team-size: 20
+    duration-seconds: 1800
+    respawn-wave-seconds: 10
+    spawn-protection-seconds: 10
+  siege:
+    nominal-team-size: 50
+    preparation-seconds: 300
+    duration-seconds: 1800
+    respawn-wave-seconds: 20
+
+  small-server-quorum:
+    opr: 1
+    siege: 1
+arenas: {}
