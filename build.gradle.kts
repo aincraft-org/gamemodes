@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.2.20"
+    java
     id("com.gradleup.shadow") version "9.1.0"
 }
 
@@ -12,18 +12,11 @@ java {
     withSourcesJar()
 }
 
-kotlin {
-    jvmToolchain(25)
-    compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_24)
-    }
-}
-
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.2.build.112-stable")
     implementation("org.xerial:sqlite-jdbc:3.46.1.0")
-    testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:6.0.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.4")
 }
 
 tasks.test {
@@ -32,13 +25,9 @@ tasks.test {
 
 tasks.jar {
     archiveBaseName.set("gamemodes")
+    enabled = false
 }
-
 
 tasks.shadowJar {
     archiveFileName.set("gamemodes-${project.version}.jar")
-}
-
-tasks.jar {
-    enabled = false
 }
