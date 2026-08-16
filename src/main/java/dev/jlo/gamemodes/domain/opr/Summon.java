@@ -1,0 +1,4 @@
+package dev.jlo.gamemodes.domain.opr;
+import dev.jlo.gamemodes.domain.common.Team;
+import java.util.Objects;
+public final class Summon { private final Team team; private final SummonKind kind; private final OutpostId outpost; public Summon(Team team,SummonKind kind,OutpostId outpost){this.team=team;this.kind=kind;this.outpost=outpost;} public Team getTeam(){return team;} public SummonKind getKind(){return kind;} public OutpostId getOutpost(){return outpost;} public Summon copy(Team team,SummonKind kind,OutpostId outpost){return new Summon(team,kind,outpost);} @Override public boolean equals(Object o){return o instanceof Summon x&&team==x.team&&kind==x.kind&&outpost==x.outpost;} @Override public int hashCode(){return Objects.hash(team,kind,outpost);} @Override public String toString(){return "Summon(team="+team+", kind="+kind+", outpost="+outpost+")";} }

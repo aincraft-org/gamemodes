@@ -1,0 +1,2 @@
+package dev.jlo.gamemodes.arena;
+public record Spawn(String id, TeamSlot team, BlockPosition position) { public Spawn { java.util.Objects.requireNonNull(id); java.util.Objects.requireNonNull(team); java.util.Objects.requireNonNull(position); } public String getId(){return id;} public TeamSlot getTeam(){return team;} public BlockPosition getPosition(){return position;} public Spawn copy(String id,TeamSlot team,BlockPosition position){return new Spawn(id,team,position);} }

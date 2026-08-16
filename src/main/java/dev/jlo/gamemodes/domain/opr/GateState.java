@@ -1,0 +1,3 @@
+package dev.jlo.gamemodes.domain.opr;
+import java.util.Objects;
+public final class GateState { private int tier, health; public GateState(){this(1,100);} public GateState(int tier,int health){this.tier=tier;this.health=health;} public int getTier(){return tier;} public void setTier(int v){tier=v;} public int getHealth(){return health;} public void setHealth(int v){health=v;} public GateState copy(int tier,int health){return new GateState(tier,health);} @Override public boolean equals(Object o){return o instanceof GateState x&&tier==x.tier&&health==x.health;} @Override public int hashCode(){return Objects.hash(tier,health);} @Override public String toString(){return "GateState(tier="+tier+", health="+health+")";} }

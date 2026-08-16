@@ -1,0 +1,2 @@
+package dev.jlo.gamemodes.arena;
+public record ResourcePlacement(String id, ResourceKind kind, BlockPosition position) { public ResourcePlacement { java.util.Objects.requireNonNull(id); java.util.Objects.requireNonNull(kind); java.util.Objects.requireNonNull(position); } public String getId(){return id;} public ResourceKind getKind(){return kind;} public BlockPosition getPosition(){return position;} public ResourcePlacement copy(String id,ResourceKind kind,BlockPosition position){return new ResourcePlacement(id,kind,position);} }

@@ -1,0 +1,2 @@
+package dev.jlo.gamemodes.arena;
+public record StructurePlacement(String id, StructureKind kind, BlockPosition position) { public StructurePlacement { java.util.Objects.requireNonNull(id); java.util.Objects.requireNonNull(kind); java.util.Objects.requireNonNull(position); } public String getId(){return id;} public StructureKind getKind(){return kind;} public BlockPosition getPosition(){return position;} public StructurePlacement copy(String id,StructureKind kind,BlockPosition position){return new StructurePlacement(id,kind,position);} }

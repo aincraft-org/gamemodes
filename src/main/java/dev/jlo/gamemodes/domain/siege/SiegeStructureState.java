@@ -1,0 +1,3 @@
+package dev.jlo.gamemodes.domain.siege;
+import java.util.Objects;
+public final class SiegeStructureState { private final int health,maxHealth; public SiegeStructureState(int health,int maxHealth){this.health=health;this.maxHealth=maxHealth;} public int getHealth(){return health;} public int getMaxHealth(){return maxHealth;} public SiegeStructureState copy(int health,int maxHealth){return new SiegeStructureState(health,maxHealth);} @Override public boolean equals(Object o){return this==o||(o instanceof SiegeStructureState x&&health==x.health&&maxHealth==x.maxHealth);}@Override public int hashCode(){return Objects.hash(health,maxHealth);}@Override public String toString(){return "SiegeStructureState(health="+health+", maxHealth="+maxHealth+")";} }
