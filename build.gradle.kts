@@ -1,10 +1,13 @@
+import org.gradle.api.publish.maven.MavenPublication
+
 plugins {
     java
+    `maven-publish`
     id("com.gradleup.shadow") version "9.1.0"
 }
 
 group = "dev.jlo.gamemodes"
-version = "0.1.0-SNAPSHOT"
+version = providers.gradleProperty("releaseVersion").orElse("0.1.0-SNAPSHOT").get()
 description = "Deterministic New World-inspired gamemodes for Paper"
 
 java {
@@ -21,6 +24,33 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    systemProperty("ci.workflow", rootProject.file(".github/workflows/ci.yml").absolutePath)
+    systemProperty("project.root", rootProject.projectDir.absolutePath)
+    systemProperty(
+        "ci.pom",
+        layout.buildDirectory.file("publications/maven/pom-default.xml").get().asFile.absolutePath,
+    )
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            artifactId = "gamemodes"
+            artifact(tasks.shadowJar) {
+                builtBy(tasks.shadowJar)
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/aincraft-org/gamemodes")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR") ?: ""
+                password = System.getenv("GITHUB_TOKEN") ?: ""
+            }
+        }
+    }
 }
 
 tasks.jar {

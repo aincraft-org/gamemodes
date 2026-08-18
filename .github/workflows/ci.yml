@@ -1,0 +1,16 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [master, main]
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  paper:
+    uses: aincraft-org/ci-template/.github/workflows/paper.yml@main
