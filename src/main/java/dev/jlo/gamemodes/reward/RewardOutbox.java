@@ -1,5 +1,6 @@
 package dev.jlo.gamemodes.reward;
 
+import dev.jlo.gamemodes.persistence.SqlStatements;
 import dev.jlo.gamemodes.persistence.SqliteMigrations;
 
 import java.sql.Connection;
@@ -35,9 +36,7 @@ public class RewardOutbox {
         if (matchId == null || matchId.isBlank() || rewardType == null || rewardType.isBlank() || amount < 0) {
             throw new IllegalArgumentException();
         }
-        String sql = "INSERT INTO reward_outbox(match_id,player_id,reward_type,amount,state,created_at_epoch_ms) "
-                + "VALUES (?,?,?,?,'PENDING',?) ON CONFLICT(match_id,player_id,reward_type) DO NOTHING";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (PreparedStatement ps = connection.prepareStatement(SqlStatements.load("reward/insert-outbox.sql"))) {
             ps.setString(1, matchId);
             ps.setString(2, playerId.toString());
             ps.setString(3, rewardType);
@@ -66,10 +65,7 @@ public class RewardOutbox {
         try {
             connection.setAutoCommit(false);
             List<String[]> keys = new ArrayList<>();
-            String select = "SELECT match_id,player_id,reward_type FROM reward_outbox "
-                    + "WHERE state='PENDING' OR (state='CLAIMED' AND lease_until_epoch_ms<=?) "
-                    + "ORDER BY created_at_epoch_ms,match_id,player_id,reward_type LIMIT ?";
-            try (PreparedStatement ps = connection.prepareStatement(select)) {
+            try (PreparedStatement ps = connection.prepareStatement(SqlStatements.load("reward/select-claimable.sql"))) {
                 ps.setLong(1, now);
                 ps.setInt(2, limit);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -79,10 +75,7 @@ public class RewardOutbox {
                 }
             }
             if (!keys.isEmpty()) {
-                String update = "UPDATE reward_outbox SET state='CLAIMED', attempts=attempts+1, "
-                        + "claimed_at_epoch_ms=?, lease_until_epoch_ms=? WHERE match_id=? AND player_id=? "
-                        + "AND reward_type=? AND (state='PENDING' OR (state='CLAIMED' AND lease_until_epoch_ms<=?))";
-                try (PreparedStatement ps = connection.prepareStatement(update)) {
+                try (PreparedStatement ps = connection.prepareStatement(SqlStatements.load("reward/update-claimed.sql"))) {
                     for (String[] key : keys) {
                         ps.setLong(1, now);
                         ps.setLong(2, until);
@@ -129,9 +122,7 @@ public class RewardOutbox {
     }
 
     public synchronized boolean markApplied(Reward reward) {
-        String sql = "UPDATE reward_outbox SET state='APPLIED', applied_at_epoch_ms=?, lease_until_epoch_ms=NULL "
-                + "WHERE match_id=? AND player_id=? AND reward_type=? AND state='CLAIMED'";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (PreparedStatement ps = connection.prepareStatement(SqlStatements.load("reward/update-applied.sql"))) {
             ps.setLong(1, clock.millis());
             ps.setString(2, reward.getMatchId());
             ps.setString(3, reward.getPlayerId().toString());
@@ -143,9 +134,7 @@ public class RewardOutbox {
     }
 
     public synchronized int abortMatch(String matchId) {
-        String sql = "UPDATE reward_outbox SET state='ABORTED', lease_until_epoch_ms=NULL WHERE match_id=? "
-                + "AND state IN ('PENDING','CLAIMED')";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (PreparedStatement ps = connection.prepareStatement(SqlStatements.load("reward/update-aborted.sql"))) {
             ps.setString(1, matchId);
             return ps.executeUpdate();
         } catch (SQLException e) {
@@ -154,9 +143,7 @@ public class RewardOutbox {
     }
 
     private Reward get(String matchId, String playerId, String type) {
-        String sql = "SELECT amount,state,attempts,lease_until_epoch_ms FROM reward_outbox "
-                + "WHERE match_id=? AND player_id=? AND reward_type=?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (PreparedStatement ps = connection.prepareStatement(SqlStatements.load("reward/select-outbox.sql"))) {
             ps.setString(1, matchId);
             ps.setString(2, playerId);
             ps.setString(3, type);

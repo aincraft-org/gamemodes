@@ -29,7 +29,7 @@ public final class MatchSnapshotStore {
 
     public synchronized MatchSnapshot load(String matchId) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT sequence, snapshot_version, payload, deadline_epoch_ms FROM match_snapshots WHERE match_id = ?")) {
+                SqlStatements.load("snapshots/select-snapshot.sql"))) {
             ps.setString(1, matchId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
@@ -51,7 +51,7 @@ public final class MatchSnapshotStore {
         try {
             int updated;
             try (PreparedStatement ps = connection.prepareStatement(
-                    "UPDATE match_snapshots SET sequence=?, snapshot_version=?, payload=?, deadline_epoch_ms=?, updated_at_epoch_ms=? WHERE match_id=? AND sequence=?")) {
+                    SqlStatements.load("snapshots/update-snapshot.sql"))) {
                 ps.setLong(1, snapshot.getSequence());
                 ps.setInt(2, snapshot.getVersion());
                 ps.setBytes(3, snapshot.getPayload());
@@ -68,7 +68,7 @@ public final class MatchSnapshotStore {
                             "Expected sequence " + expectedSequence + " for " + snapshot.getMatchId());
                 }
                 try (PreparedStatement ps = connection.prepareStatement(
-                        "INSERT INTO match_snapshots(match_id, sequence, snapshot_version, payload, deadline_epoch_ms, updated_at_epoch_ms) VALUES (?, ?, ?, ?, ?, ?)")) {
+                        SqlStatements.load("snapshots/insert-snapshot.sql"))) {
                     ps.setString(1, snapshot.getMatchId());
                     ps.setLong(2, snapshot.getSequence());
                     ps.setInt(3, snapshot.getVersion());

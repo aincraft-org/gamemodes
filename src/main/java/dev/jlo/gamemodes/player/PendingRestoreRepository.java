@@ -1,5 +1,6 @@
 package dev.jlo.gamemodes.player;
 
+import dev.jlo.gamemodes.persistence.SqlStatements;
 import dev.jlo.gamemodes.persistence.SqliteMigrations;
 
 import java.sql.Connection;
@@ -28,20 +29,8 @@ public class PendingRestoreRepository {
     }
 
     public synchronized void put(PlayerSnapshot snapshot) {
-        String sql = """
-                INSERT INTO player_restores(
-                    player_id, restore_version, payload, state, attempts,
-                    available_at_epoch_ms, updated_at_epoch_ms
-                ) VALUES (?, 1, ?, 'PENDING', 0, ?, ?)
-                ON CONFLICT(player_id) DO UPDATE SET
-                    payload = excluded.payload,
-                    state = 'PENDING',
-                    attempts = 0,
-                    available_at_epoch_ms = excluded.available_at_epoch_ms,
-                    updated_at_epoch_ms = excluded.updated_at_epoch_ms
-                """;
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                SqlStatements.load("restores/upsert-restore.sql"))) {
             long now = clock.millis();
             statement.setString(1, snapshot.getPlayerId().toString());
             statement.setBytes(2, snapshot.encode());
@@ -54,18 +43,8 @@ public class PendingRestoreRepository {
     }
 
     public synchronized PendingRestore claim(UUID playerId) {
-        String sql = """
-                UPDATE player_restores
-                SET state = 'CLAIMED',
-                    attempts = attempts + 1,
-                    claimed_at_epoch_ms = ?,
-                    updated_at_epoch_ms = ?
-                WHERE player_id = ?
-                  AND state IN ('PENDING', 'FAILED')
-                  AND available_at_epoch_ms <= ?
-                """;
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                SqlStatements.load("restores/update-claimed.sql"))) {
             long now = clock.millis();
             statement.setLong(1, now);
             statement.setLong(2, now);
@@ -82,16 +61,8 @@ public class PendingRestoreRepository {
     }
 
     public synchronized boolean markFailed(UUID playerId, String error) {
-        String sql = """
-                UPDATE player_restores
-                SET state = 'FAILED',
-                    last_error = ?,
-                    updated_at_epoch_ms = ?
-                WHERE player_id = ?
-                  AND state = 'CLAIMED'
-                """;
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                SqlStatements.load("restores/update-failed.sql"))) {
             statement.setString(1, error);
             statement.setLong(2, clock.millis());
             statement.setString(3, playerId.toString());
@@ -106,10 +77,8 @@ public class PendingRestoreRepository {
     }
 
     public PendingRestore get(UUID playerId) {
-        String sql = "SELECT payload, state, attempts "
-                + "FROM player_restores WHERE player_id = ?";
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                SqlStatements.load("restores/select-restore.sql"))) {
             statement.setString(1, playerId.toString());
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (!resultSet.next()) {
@@ -128,16 +97,8 @@ public class PendingRestoreRepository {
     }
 
     private boolean transition(UUID playerId, String state) {
-        String sql = """
-                UPDATE player_restores
-                SET state = ?,
-                    completed_at_epoch_ms = ?,
-                    updated_at_epoch_ms = ?
-                WHERE player_id = ?
-                  AND state = 'CLAIMED'
-                """;
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                SqlStatements.load("restores/update-completed.sql"))) {
             long now = clock.millis();
             statement.setString(1, state);
             statement.setLong(2, now);

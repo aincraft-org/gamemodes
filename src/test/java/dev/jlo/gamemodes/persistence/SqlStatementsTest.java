@@ -2,7 +2,12 @@ package dev.jlo.gamemodes.persistence;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -39,5 +44,26 @@ class SqlStatementsTest {
         assertTrue(insert.contains("schema_migrations"));
         assertTrue(initial.contains("match_snapshots"));
         assertTrue(leases.contains("lease_until_epoch_ms"));
+    }
+
+    @Test
+    void javaSourcesDoNotContainInlineCreateOrInsert() throws IOException {
+        Path root = Path.of(requiredProperty("project.root")).resolve("src/main/java");
+        assertTrue(Files.isDirectory(root), "missing " + root);
+        try (var stream = Files.walk(root)) {
+            var sources = stream.filter(path -> path.toString().endsWith(".java")).toList();
+            assertFalse(sources.isEmpty(), "no Java sources under " + root);
+            for (Path source : sources) {
+                String java = Files.readString(source);
+                assertFalse(java.contains("CREATE TABLE"), () -> source.toString());
+                assertFalse(java.contains("INSERT INTO"), () -> source.toString());
+            }
+        }
+    }
+
+    private static String requiredProperty(String name) {
+        String value = System.getProperty(name);
+        assertTrue(value != null && !value.isBlank(), "missing system property " + name);
+        return value;
     }
 }
