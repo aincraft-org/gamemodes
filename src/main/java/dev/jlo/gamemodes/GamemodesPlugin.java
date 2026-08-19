@@ -56,7 +56,7 @@ public class GamemodesPlugin extends JavaPlugin {
             try {
                 new SqliteMigrations().apply(connection);
                 return connection;
-            } catch (SQLException | IOException exception) {
+            } catch (SQLException exception) {
                 try {
                     connection.close();
                 } catch (SQLException closeException) {

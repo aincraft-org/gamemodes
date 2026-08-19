@@ -1,8 +1,5 @@
 package dev.jlo.gamemodes.persistence;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -17,34 +14,33 @@ import java.util.regex.Pattern;
 
 /** Applies classpath SQL migrations exactly once, in version order. */
 public class SqliteMigrations {
+    private static final List<String> MIGRATIONS = List.of(
+            "V1__initial.sql",
+            "V2__reward_outbox_leases.sql");
+
     private final Clock clock;
-    private final String resourcePrefix;
     private final Pattern migrationName = Pattern.compile("V(\\d+)__([A-Za-z0-9_.-]+)\\.sql");
 
     public SqliteMigrations() {
-        this(Clock.systemUTC(), "db/migrations/");
+        this(Clock.systemUTC());
     }
 
     public SqliteMigrations(Clock clock) {
-        this(clock, "db/migrations/");
-    }
-
-    public SqliteMigrations(Clock clock, String resourcePrefix) {
         this.clock = Objects.requireNonNull(clock, "clock");
-        this.resourcePrefix = Objects.requireNonNull(resourcePrefix, "resourcePrefix");
     }
 
-    public void apply(Connection connection) throws SQLException, IOException {
+    public void apply(Connection connection) throws SQLException {
         Objects.requireNonNull(connection, "connection");
         try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate("CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, name TEXT NOT NULL, applied_at_epoch_ms INTEGER NOT NULL)");
+            statement.executeUpdate(SqlStatements.load("migrations/create-schema_migrations.sql"));
         }
         List<Migration> migrations = discover();
         connection.setAutoCommit(false);
         try {
             for (Migration migration : migrations) {
                 boolean exists;
-                try (var ps = connection.prepareStatement("SELECT 1 FROM schema_migrations WHERE version = ?")) {
+                try (var ps = connection.prepareStatement(
+                        SqlStatements.load("migrations/select-schema_migrations.sql"))) {
                     ps.setInt(1, migration.version());
                     try (ResultSet rs = ps.executeQuery()) {
                         exists = rs.next();
@@ -59,7 +55,8 @@ public class SqliteMigrations {
                             }
                         }
                     }
-                    try (var ps = connection.prepareStatement("INSERT INTO schema_migrations(version, name, applied_at_epoch_ms) VALUES (?, ?, ?)")) {
+                    try (var ps = connection.prepareStatement(
+                            SqlStatements.load("migrations/insert-schema_migrations.sql"))) {
                         ps.setInt(1, migration.version());
                         ps.setString(2, migration.name());
                         ps.setLong(3, clock.millis());
@@ -77,9 +74,6 @@ public class SqliteMigrations {
             if (throwable instanceof SQLException sqlException) {
                 throw sqlException;
             }
-            if (throwable instanceof IOException ioException) {
-                throw ioException;
-            }
             if (throwable instanceof RuntimeException runtimeException) {
                 throw runtimeException;
             }
@@ -92,22 +86,14 @@ public class SqliteMigrations {
         }
     }
 
-    private List<Migration> discover() throws IOException {
-        List<String> names = List.of("V1__initial.sql", "V2__reward_outbox_leases.sql");
-        List<Migration> migrations = new ArrayList<>(names.size());
-        for (String file : names) {
+    private List<Migration> discover() {
+        List<Migration> migrations = new ArrayList<>(MIGRATIONS.size());
+        for (String file : MIGRATIONS) {
             Matcher match = migrationName.matcher(file);
             if (!match.matches()) {
                 throw new IllegalArgumentException("Invalid migration name: " + file);
             }
-            String sql;
-            InputStream input = SqliteMigrations.class.getClassLoader().getResourceAsStream(resourcePrefix + file);
-            if (input == null) {
-                throw new IllegalStateException("Missing migration resource: " + file);
-            }
-            try (InputStream migrationInput = input) {
-                sql = new String(migrationInput.readAllBytes(), StandardCharsets.UTF_8);
-            }
+            String sql = SqlStatements.load("migrations/" + file);
             migrations.add(new Migration(Integer.parseInt(match.group(1)), file, sql));
         }
         migrations.sort(Comparator.comparingInt(Migration::version));

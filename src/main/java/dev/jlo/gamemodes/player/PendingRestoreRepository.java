@@ -22,7 +22,7 @@ public class PendingRestoreRepository {
         this.clock = clock;
         try {
             new SqliteMigrations(clock).apply(connection);
-        } catch (SQLException | java.io.IOException e) {
+        } catch (SQLException e) {
             throw new RuntimeException("Failed to apply player restore migrations", e);
         }
     }
